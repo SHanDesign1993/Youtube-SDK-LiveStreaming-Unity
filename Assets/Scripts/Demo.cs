@@ -14,9 +14,6 @@ using TMPro;
 
 public class Demo : MonoBehaviour
 {
-    [SerializeField] string clientId = "---GET CLIENTID FROM GOOGLE DEVELOPER CONSOLE---";
-    [SerializeField] string clientSecret = "---GET CLIENTSECRET FROM GOOGLE DEVELOPER CONSOLE---";
-
     [SerializeField] string streamtitle = "test title";
     [SerializeField] string streamname = "test name";
 
@@ -31,45 +28,32 @@ public class Demo : MonoBehaviour
 
     public void OpenStream()
     {
-        Task task = StreamToYoutubeAsync();
+        StartCoroutine(StreamToYoutubeCoroutine());
     }
 
-    async Task StreamToYoutubeAsync()
+    IEnumerator StreamToYoutubeCoroutine()
     {
-        int dt = 50;
+        float dt = .5f;
 
         //---OAuth2 Authorization
         #region  setup OAuth2 Login with ClientId & ClientSecret
         Debug.Log("======OAuth2 Login Session Started=======");
         streamstatusLabel.text = "setup OAuth2 Login with ClientId & ClientSecret";
-        UserCredential credential;
-
-        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-            //GoogleClientSecrets.Load(filestream).Secrets,
-
+        
+        Task<UserCredential> taskGetUserCredential = GoogleWebAuthorizationBroker.AuthorizeAsync(
             new ClientSecrets
             {
-                ClientId = clientId,
-                ClientSecret = clientSecret
+                ClientId = Credentials.CLIENT_ID,
+                ClientSecret = Credentials.CLIENT_SECRET
             },
-
             new[] { YouTubeService.Scope.Youtube },
             "user", CancellationToken.None);
 
+        yield return new WaitUntil(() => taskGetUserCredential.Status == TaskStatus.RanToCompletion);
+        UserCredential credential = taskGetUserCredential.Result;
+
         Debug.Log($"Login successful with {credential}");
 
-        /* OPEN FILE
-        using (var filestream = new FileStream(Application.dataPath + "/StreamingAssets/" + "client_secrets.json", FileMode.Open, FileAccess.Read))
-        {
-            Debug.Log($"open file {filestream.Name}");
-            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.Load(filestream).Secrets,
-                new[] { YouTubeService.Scope.Youtube },
-                "user", CancellationToken.None);
-
-            Debug.Log($"Login successful with {credential}");
-        }
-        */
         Debug.Log("======OAuth2 Login Session Ended=======");
 
         var youtubeService = new YouTubeService(new BaseClientService.Initializer()
@@ -120,7 +104,7 @@ public class Demo : MonoBehaviour
         catch(Exception e)
         {
             Debug.LogError(e);
-            return;
+            yield break;
         }
         Debug.Log("======create LiveBroadCast Ended=======");
         #endregion
@@ -169,7 +153,7 @@ public class Demo : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError(e);
-            return;
+            yield break;
         }
         var push_addr = liveStream.Cdn.IngestionInfo.IngestionAddress + "/" + liveStream.Cdn.IngestionInfo.StreamName;
         Debug.Log($"Get rtmp push address: {push_addr}");
@@ -193,7 +177,7 @@ public class Demo : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError(e);
-            return;
+            yield break;
         }
 
         string share_addr = "https://www.youtube.com/watch?v=" + broadcast.Id;
@@ -231,7 +215,7 @@ public class Demo : MonoBehaviour
                 int errortimes = 0;
                 while (errortimes<3 && !ls.Status.StreamStatus.Equals("active"))
                 {
-                    await Task.Delay(dt);
+                    yield return new WaitForSeconds(dt);
                     Debug.Log($"Pending, current stream status: {ls.Status.StreamStatus} {errortimes}");
                     returnedList = liveStreamlist.Execute();
                     liveStreams = returnedList.Items as List<LiveStream>;
@@ -243,7 +227,7 @@ public class Demo : MonoBehaviour
                 {
                     Debug.Log("Streaming Process is Pending. due to there is no streaming push to youtube address.");
                     errortimes = 0;
-                    return;
+                    yield break;
                 }
             }    
         }
@@ -270,7 +254,7 @@ public class Demo : MonoBehaviour
                 int errortimes = 0;
                 while (errortimes < 3 && !liveBroadcastReq.Status.LifeCycleStatus.Equals("testing"))
                 {
-                    await Task.Delay(dt);
+                    yield return new WaitForSeconds(dt);
                     Debug.Log("Error publish broadcast - getLifeCycleStatus: " + liveBroadcastReq.Status.LifeCycleStatus);
                     liveBroadcastListResponse = liveBroadRequest.Execute();
                     broadcastReturnedList = liveBroadcastListResponse.Items as List<LiveBroadcast>;
@@ -282,7 +266,7 @@ public class Demo : MonoBehaviour
                 {
                     Debug.Log("Streaming Process is Pending. due to there is problem preforming testing.");
                     errortimes = 0;
-                    return;
+                    yield break;
                 }
             }  
         }

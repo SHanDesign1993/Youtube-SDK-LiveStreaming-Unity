@@ -1099,6 +1099,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32b97be0134b1a841ad8c3c06b23277b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  clientId: 333138328748-o60kn4ahd4hsmeogln2gv0a0ah3afcvr.apps.googleusercontent.com
+  clientSecret: r3fswvw71C2ezjVRn7m0lkRc
   streamtitle: test title
   streamname: test name
   openURLBtn: {fileID: 650488430}
