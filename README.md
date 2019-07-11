@@ -9,7 +9,7 @@ It's a unity project implementing livestreaming unity streaming api from google 
 4. Copy ClientId & ClientSecret   
    
 ## ---IN UNITY---
-1. Paste ClientId & ClientSecret in Scene Demo Object Fields
+1. Paste ClientId & ClientSecret in Credentials.cs
 2. Hit Play
 3. Hit Start Button
 4. Hit Open Link Button to open streaming url
